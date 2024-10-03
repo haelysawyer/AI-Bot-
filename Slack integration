@@ -1,0 +1,48 @@
+import os
+import json
+from slack_sdk import WebhookClient, WebApi
+from slack_sdk.bolt import App
+from nltk.tokenize import word_tokenize
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Slack app settings
+SLACK_CLIENT_ID = os.environ['SLACK_CLIENT_ID']
+SLACK_CLIENT_SECRET = os.environ['SLACK_CLIENT_SECRET']
+SLACK_SIGNING_SECRET = os.environ['SLACK_SIGNING_SECRET']
+SLACK_BOT_TOKEN = os.environ['SLACK_BOT_TOKEN']
+
+# Initialize Slack app
+app = App(
+    client=WebhookClient(SLACK_CLIENT_ID, SLACK_CLIENT_SECRET),
+    signing_secret=SLACK_SIGNING_SECRET,
+    token=SLACK_BOT_TOKEN
+)
+
+# Define bot's response function
+def respond(message, say):
+    # Tokenize user input
+    tokens = word_tokenize(message)
+
+    # Simple intent-based response
+    if 'hello' in tokens or 'hi' in tokens:
+        say('Hello!')
+    elif 'help' in tokens:
+        say('I can help with...')
+    else:
+        say('I didn\'t understand that.')
+
+# Define Slack event listeners
+@app.event('app_mention')
+def handle_mention(event, say):
+    respond(event['text'], say)
+
+@app.event('message')
+def handle_message(event, say):
+    respond(event['text'], say)
+
+# Start Slack app
+if __name__ == '__main__':
+    app.start(port=3000)
